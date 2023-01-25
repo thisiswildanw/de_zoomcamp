@@ -26,7 +26,7 @@ Table of Contents:
 
 Introduction to Data Engineering
 ================================
-[**Data Engineering**]is the practice of designing and building systems for collecting, storing, and analyzing data at scale. 
+[**Data Engineering**](hhttps://www.coursera.org/articles/what-does-a-data-engineer-do-and-how-do-i-become-one)is the practice of designing and building systems for collecting, storing, and analyzing data at scale. 
 
 
 Docker and Postgres
@@ -188,9 +188,15 @@ pgcli -h localhost -p 5432 -u root -d ny_taxi
   <p align="center">Using pgcli to Access a Postgre Database (ny_taxi)</p>
 </p>
 
+<br></br>
 
+We have learned how to run postgre in a docker container. Next, we will use data from [NYC TLC Trip Record Data website](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page), specifically [Yellow Taxi Trip Record Parquet file for January 2021](https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2021-01.parquet) and ingest it to postgre database using Jupyter NoteBook.
 
+Here, the illustration of Yellow Taxi Trip ingestion process in this project :
 
+<p align="center">
+  <img src="2_Images/2_Ingesting_NYC_Data_to_Postgres/3_data_ingestion_architecture.png" alt="Using pgcli" >
+  <p align="center">Ingestion Process</p>
+</p>
 
-
-
+>Note: All ingestion detailed step are noted via Jupyter Notebook `explore_ingest_data.ipynb`. 
