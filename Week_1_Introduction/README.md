@@ -13,7 +13,7 @@ Table of Contents:
     - [Creating a Simple Data Pipeline using Python](#creating-a-simple-data-pipeline-in-docker)
     - [Ingesting NYC Taxi Data to Postgres with Python](#ingesting-nyc-taxi-data-to-postgres-with-python) 
     - [Connecting pgAdmin and Postgres with Docker](#connecting-pgadmin-and-postgres-with-docker)
-    - Putting the ingestion script to Docker
+    - [Putting the ingestion script to Docker](#putting-the-ingestion-script-to-docker)
     - Running Postgres and pgAdmin with Docker-Compose
     - SQL refresher
 - GCP and Terraform
@@ -216,5 +216,85 @@ _[back to the top](#table-of-contents)_
 
 ### Connecting pgAdmin and Postgres with Docker 
 
+`pgAdmin` is a web-based tool to access and manage database. Its possible to run pgAdmin as container along with Postgre container, but both containers will have to be in the same *virtual network* so they can connect each other. 
+
+First, create a virtual Docker network `pg-network`:
+```
+docker network create pg-network 
+```
+
+Use `docker network ls` to show existed network. 
+
+<p align="center">
+  <img src="2_Images/3_Connecting_pgAdmin_and_Postgre_with_Docker/0_existed_docker_net.png" >
+  <p align="center">Existed Docker Network</p>
+</p>
+
+We will now re-run our Postgres container with the added network name and the container network name, so that the pgAdmin container can find it (we'll use `pg-database` for the container name):
+
+```
+docker run -it \
+    -e POSTGRES_USER="root" \
+    -e POSTGRES_PASSWORD="root" \
+    -e POSTGRES_DB="ny_taxi" \
+    -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
+    -p 5432:5432 \
+    --network=pg-network \
+    --name pg-database \
+    postgres:13
+
+```
+
+Then, run pgAdmin container on another terminal:
+
+```
+docker run -it \
+    -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+    -e PGADMIN_DEFAULT_PASSWORD="root" \
+    -p 8080:80 \
+    --network=pg-network \
+    --name pgadmin \
+    dpage/pgadmin4
+```
+- The container needs 2 environment variables: a login email and a password. We use `admin@admin.com` and root in this example.
+>Note : Username and Password in this project are meant for testing. Please give more appropriate Username and Password for daily production. 
+- `pgAdmin` is a web app and its default port is `80`; we map it to `8080` in our localhost to avoid any possible conflicts.
+- Just like with the Postgres container, we specify a network and a name. However, the name in this example isn't really necessary because there won't be any containers trying to access this particular container.
+- The actual image name is `dpage/pgadmin4`.
+
+We now able to load pgAdmin on a web browser by browsing to `localhost:8080`. Use the same email and password you used for running the container to log in.
+
+<p align="center">
+  <img src="2_Images/3_Connecting_pgAdmin_and_Postgre_with_Docker/1_pgAdmin_login.png" >
+  <p align="center">pgAdmin Login Page</p>
+</p>
+
+Right-click on Servers on the left sidebar and select Register > Server...
+
+<p align="center">
+  <img src="2_Images/3_Connecting_pgAdmin_and_Postgre_with_Docker/2_create_server.png" >
+  <p align="center">Create Server</p>
+</p>
+
+Under *General* setting give the Server a name and under *Connection* add the same host name, user and password you used when running the container.
+
+<p align="center">
+  <img src="2_Images/3_Connecting_pgAdmin_and_Postgre_with_Docker/3_register_general.png" >
+  <p align="center">General Setting</p>
+</p>
+
+<p align="center">
+  <img src="2_Images/3_Connecting_pgAdmin_and_Postgre_with_Docker/4_register_connection.png" >
+  <p align="center">Connection Setting</p>
+</p>
+
+Click on **Save**. Now, we should connected to the database.
+
+We will explore using pgAdmin in next lessons.
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
 
 
+### Putting the ingestion script to Docker
