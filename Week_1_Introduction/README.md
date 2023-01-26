@@ -16,13 +16,13 @@ Table of Contents:
     - [Putting Ingestion Script with Docker](#putting-ingestion-script-with-docker)
     - [Running Postgres and pgAdmin with Docker-Compose](#running-postgres-and-pgadmin-with-docker-compose)
     - [SQL refresher](#sql-refresher)
-    - [Homework Part 1]()
+    - [Homework Part 1](#homework-part-1)
 - GCP and Terraform
-    - GCP initial setup
-    - GCP setup for access
-    - Terraform basics
-    - Creating GCP infrastructure with Terraform
-- Homework
+    - [GCP initial setup](#gcp-initial-setup)
+    - [GCP setup for access](#gcp-setup-for-access)
+    - [Terraform basics](#terraform-basics)
+    - [Creating GCP infrastructure with Terraform](#creating-gcp-infrastructure-with-terraform)
+    - [Homework Part 2](#homework-part-2)
 
 
 Introduction to Data Engineering
@@ -297,7 +297,7 @@ _[back to the top](#table-of-contents)_
 
 <br></br>
 
-/
+
 ### Putting Ingestion Script with Docker
 
 First, we need to export our existed Jupyter Notebook `explore_ingest_data.ipynb`(1_Code/4_Putting_Ingestion_Script_to_Docker/explore_ingest_data.ipynb) with this following command:
@@ -471,6 +471,99 @@ And if we want to run the containers again in the background rather than in the 
 ```bash
 docker-compose up -d
 ```
+_[back to the top](#table-of-contents)_
 
-### SQL Refresher
+<br></br>
 
+
+### SQL Refresher 
+#### (Comming Soon)
+
+### Homework Part 1
+
+#### Question 1 : Knowing docker tags
+#### Answer : `--iidfile string`
+Run the command to get information on Docker
+
+`docker --help`
+
+Now run the command to get help on the `docker build` command
+
+Which tag has the following text? - Write the image ID to the file
+
+<p align="center">
+  <img src="3_Homework/1_question_answer.png" >
+</p>
+
+#### Question 2 : Understanding docker first run
+#### Answer : 3
+
+Run docker with the `python:3.9` image in an interactive mode and the entrypoint of bash. Now check the python modules that are installed ( use pip list). How many python packages/modules are installed?
+
+
+<p align="center">
+  <img src="3_Homework/2_question_answer.png" >
+</p>
+
+#### Question 3 : Count Record
+#### Answer : 20530
+
+How many taxi trips were totally made on January 15?
+
+Tip: started and finished on `2019-01-15`
+
+Remember that `lpep_pickup_datetime` and `lpep_dropoff_datetime` columns are in the format timestamp (date and hour+min+sec) and not in date.
+
+<p align="center">
+  <img src="3_Homework/3_question_answer.png" >
+</p>
+
+
+#### Question 4 :  Largest trip for each day
+#### Answer : 2019-01-15
+Which was the day with the largest trip distance Use the pick up time for your calculations.
+
+
+<p align="center">
+  <img src="3_Homework/4_question_answer.png" >
+</p>
+
+#### Question 5. The number of passengers
+#### Answer : 2: 1282 ; 3: 254
+In 2019-01-01 how many trips had 2 and 3 passengers?
+<p align="center">
+  <img src="3_Homework/5_question_answer.png" >
+</p>
+
+#### Question 6. Largest tip
+#### Answer : Long Island City / Queens Plaza
+
+For the passengers picked up in the Astoria Zone which was the drop off zone that had the largest tip? We want the name of the zone, not the id.
+
+Note: it's not a typo, it's tip , not trip
+
+<p align="center">
+  <img src="3_Homework/6_question_answer.png" >
+</p>
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
+
+### GCP initial setup
+#### Comming Soon
+
+### GCP setup for access
+#### Comming Soon
+
+### Terraform basics
+#### Comming Soon
+
+### Creating GCP infrastructure with Terraform
+#### Comming Soon
+
+### Homework Part 2
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
