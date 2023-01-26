@@ -12,7 +12,7 @@ Table of Contents:
     - [Introduction to Docker](#introduction-to-docker)
     - [Creating a Simple Data Pipeline using Python](#creating-a-simple-data-pipeline-in-docker)
     - [Ingesting NYC Taxi Data to Postgres with Python](#ingesting-nyc-taxi-data-to-postgres-with-python) 
-    - Connecting pgAdmin and Postgres
+    - [Connecting pgAdmin and Postgres with Docker](#connecting-pgadmin-and-postgres-with-docker)
     - Putting the ingestion script to Docker
     - Running Postgres and pgAdmin with Docker-Compose
     - SQL refresher
@@ -192,11 +192,29 @@ pgcli -h localhost -p 5432 -u root -d ny_taxi
 
 We have learned how to run postgre in a docker container. Next, we will use data from [NYC TLC Trip Record Data website](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page), specifically [Yellow Taxi Trip Record Parquet file for January 2021](https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2021-01.parquet) and ingest it to postgre database using Jupyter NoteBook.
 
-Here, the illustration of Yellow Taxi Trip ingestion process in this project :
-
 <p align="center">
   <img src="2_Images/2_Ingesting_NYC_Data_to_Postgres/3_data_ingestion_architecture.png" alt="Using pgcli" >
   <p align="center">Ingestion Process</p>
 </p>
 
->Note: All ingestion detailed step are noted via Jupyter Notebook `explore_ingest_data.ipynb`. 
+Here, summary of NYC Data ingestion process via Jupyter Notebook in this project:
+- Download parquet data using following command: 
+  ```
+  wget https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2021-01.parquet
+  ```
+- Import python libraries that we needed (like Pandas & SQLAlchemy). 
+- Create Schema for Yellow Taxi Trip database 
+- Test NY_taxi Connection using SQLAlchemy
+- Batch Ingestion from Yellow Taxi Trip Parquet Data to NY_Taxi Database 
+- Create SQL Query to Access Postgre via Jupyter Notebook
+
+>Note: Follow this Jupyter Notebook [*link*](1_Code/2_Ingesting_NYC_Data_to_Postgres/explore_ingest_data.ipynb) for detailed guide. 
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
+
+### Connecting pgAdmin and Postgres with Docker 
+
+
+
