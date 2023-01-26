@@ -13,7 +13,7 @@ Table of Contents:
     - [Creating a Simple Data Pipeline using Python](#creating-a-simple-data-pipeline-in-docker)
     - [Ingesting NYC Taxi Data to Postgres with Python](#ingesting-nyc-taxi-data-to-postgres-with-python) 
     - [Connecting pgAdmin and Postgres with Docker](#connecting-pgadmin-and-postgres-with-docker)
-    - [Putting the ingestion script to Docker](#putting-the-ingestion-script-to-docker)
+    - [Putting Ingestion Script with Docker](#putting-ingestion-script-with-docker)
     - Running Postgres and pgAdmin with Docker-Compose
     - SQL refresher
 - GCP and Terraform
@@ -297,4 +297,26 @@ _[back to the top](#table-of-contents)_
 <br></br>
 
 
-### Putting the ingestion script to Docker
+### Putting Ingestion Script with Docker
+
+First, we need to export our existed Jupyter Notebook `explore_ingest_data.ipynb`(1_Code/4_Putting_Ingestion_Script_to_Docker/explore_ingest_data.ipynb) with this following command:
+
+```
+jupyter nbconvert --to=script explore_ingest_data.ipynb
+```
+
+Clean up the script by removing everything we don't need. We will also rename it to `ingest_data.py` and add a few modifications:
+
+- Use argparse to handle the following command line arguments:
+  - Username
+  - Password
+  - Host
+  - Port
+  - Database name
+  - Table name
+  - URL for the `parquet` file
+- The engine we created for connecting to Postgres will be tweaked so that we pass the parameters and build the URL from them, like this: 
+```
+engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
+```
+- We will also download `parquet` file using the provided URL argument.
