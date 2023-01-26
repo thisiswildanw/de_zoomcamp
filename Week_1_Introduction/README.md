@@ -14,8 +14,9 @@ Table of Contents:
     - [Ingesting NYC Taxi Data to Postgres with Python](#ingesting-nyc-taxi-data-to-postgres-with-python) 
     - [Connecting pgAdmin and Postgres with Docker](#connecting-pgadmin-and-postgres-with-docker)
     - [Putting Ingestion Script with Docker](#putting-ingestion-script-with-docker)
-    - Running Postgres and pgAdmin with Docker-Compose
-    - SQL refresher
+    - [Running Postgres and pgAdmin with Docker-Compose](#running-postgres-and-pgadmin-with-docker-compose)
+    - [SQL refresher](#sql-refresher)
+    - [Homework Part 1]()
 - GCP and Terraform
     - GCP initial setup
     - GCP setup for access
@@ -296,7 +297,7 @@ _[back to the top](#table-of-contents)_
 
 <br></br>
 
-
+/
 ### Putting Ingestion Script with Docker
 
 First, we need to export our existed Jupyter Notebook `explore_ingest_data.ipynb`(1_Code/4_Putting_Ingestion_Script_to_Docker/explore_ingest_data.ipynb) with this following command:
@@ -320,3 +321,156 @@ Clean up the script by removing everything we don't need. We will also rename it
 engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
 ```
 - We will also download `parquet` file using the provided URL argument.
+
+You can check the python script `ingest_data.py` [here](1_Code/4_Putting_Ingestion_Script_to_Docker/ingest_data.py)
+
+Let's test the script using this following command:
+```
+python3 ingest_data.py \
+    --user=root \
+    --password=root \
+    --host=localhost \
+    --port=5432 \
+    --db=ny_taxi \
+    --table_name=yellow_taxi_trips \
+    --url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2021-01.parquet"
+
+```
+<p align="center">
+  <img src="2_Images/4_Putting_Ingestion_Script_to_Docker/1_run_ingest_data.png" >
+  <p align="center">Run ingest_data.py </p>
+</p>
+
+
+
+Back in pgAdmin, refresh the Tables and check that `yellow_taxi_trips` was created. You can also run a SQL query to check the contents:
+
+```sql
+SELECT
+    COUNT(1)
+FROM
+    yellow_taxi_trips;
+```
+
+This query should return 1,369,769 rows
+
+<p align="center">
+  <img src="2_Images/4_Putting_Ingestion_Script_to_Docker/2_count_row_pgAdmin.png" >
+  <p align="center">Query Result </p>
+</p>
+
+After script running successfully, we are now ready to dockerize `ingest_data.py` by modify [`dockerfile`]() image in previous lesson. 
+
+```docker 
+#Docker image that we will build
+FROM python:3.9
+
+#Set up our image by installing pandas (in this case)
+RUN apt-get install wget
+RUN pip install pandas sqlalchemy psycopg2-binary
+
+#Copy the script to the conainer ("source file" "destination")
+COPY ingest_data.py ingest_data.py
+
+#Define what to do when the container runs
+ENTRYPOINT ["python", "ingest_data.py"]
+```
+Then, let's build the image:
+
+```
+docker build -t yellow_taxi_ingest:v01 .
+```
+
+And run it:
+
+```
+docker run -it \
+    --network=pg-network \
+    yellow_taxi_ingest:v01 \
+    --user=root \
+    --password=root \
+    --host=pg-database \
+    --port=5432 \
+    --db=ny_taxi \
+    --table_name=yellow_taxi_trips \
+    --url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2021-01.parquet"
+
+```
+The Result: 
+
+<p align="center">
+  <img src="2_Images/4_Putting_Ingestion_Script_to_Docker/3_containerized_ingest.png" >
+  <p align="center">Containerized Ingestion</p>
+</p>
+
+<p align="center">
+  <img src="2_Images/4_Putting_Ingestion_Script_to_Docker/4_query_result.png" >
+  <p align="center">Query Result</p>
+</p>
+
+- As expected, the query return 1,369,769 row size. 
+
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
+
+
+### Running Postgres and pgAdmin with Docker-Compose
+
+
+Running Postgres and pgAdmin with Docker-Composee for pgAdmin to save its settings, so that we don't have to keep re-creating the connection to Postgres every time rerun the container. Make sure you create a `data_pgadmin` directory in your work folder where you run `docker-compose` from.
+
+```
+services:
+  pgdatabase:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=ny_taxi
+    volumes:
+      - "./ny_taxi_postgres_data:/var/lib/postgresql/data:rw"
+    ports:
+      - "5432:5432"
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    volumes:
+      - "./data_pgadmin:/var/lib/pgadmin"
+    ports:
+      - "8080:80"
+```
+
+
+- We don't have to specify a network because docker-compose takes care of it: every single container (or "service", as the file states) will run withing the same network and will be able to find each other according to their names (pgdatabase and pgadmin in this example).
+- We've added a volume for pgAdmin to save its settings, so that you don't have to keep re-creating the connection to Postgres every time ypu rerun the container. Make sure you create a data_pgadmin directory in your work folder where you run docker-compose from.
+
+- All other details from the `docker run` commands (environment variables, volumes and ports) are mentioned accordingly in the file following YAML syntax.
+
+We can run Docker compose by running the following command from the same directory where `docker-compose.yaml` is found. Make sure that all previous containers aren't running anymore:
+
+```bash
+docker-compose up
+```
+
+>Note: this command asumes that the `ny_taxi_postgres_data` used for mounting the volume is in the same directory as `docker-compose.yaml`.
+
+Since the settings for pgAdmin were stored within the container and we have killed the previous onem, we have to re-create the connection by following the steps [in this section](#connecting-pgadmin-and-postgres-with-docker-networking).
+
+Press `Ctrl+C` in order to shut down the containers. The proper way of shutting them down is with this command:
+
+```bash
+docker-compose down
+```
+
+And if we want to run the containers again in the background rather than in the foreground (thus freeing up your terminal), we can run it in detached mode:
+
+```bash
+docker-compose up -d
+```
+
+### SQL Refresher
+
