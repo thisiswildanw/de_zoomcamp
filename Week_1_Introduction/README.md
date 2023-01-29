@@ -17,7 +17,7 @@ Table of Contents:
     - [Running Postgres and pgAdmin with Docker-Compose](#running-postgres-and-pgadmin-with-docker-compose)
     - [SQL refresher](#sql-refresher)
     - [Homework Part 1](#homework-part-1)
-- GCP and Terraform
+- [GCP and Terraform](#gcp-and-terraform)
     - [GCP initial setup](#gcp-initial-setup)
     - [GCP setup for access](#gcp-setup-for-access)
     - [Terraform basics](#terraform-basics)
@@ -477,7 +477,120 @@ _[back to the top](#table-of-contents)_
 
 
 ### SQL Refresher 
-#### (Comming Soon)
+Below are a series of SQL query examples to remember how to querying SQL. There are two tables (`yellow_taxi_trips`) and (`zones`) that we're working on this section. 
+
+#### 1 Select  first 100 rows in the  `yellow_taxi_trips` table.
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/1.png" >
+  <p align="center">Query Result</p>
+</p>
+
+#### 2 Select first 100 rows in the `yellow_taxi_trips` and `zones` tables with condition below.
+- Give aliases to the `yellow_taxi_trips` and `zones` tables for easier access.
+- Replace Ds inside `PULocationID` and `DOLocationID` with the actual zone IDs for pick ups and drop offs.
+- Use double quotes (`" "`) to access column names with capital letters
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/2.png" >
+  <p align="center">Query Result</p>
+</p>
+
+
+
+#### 3 Select first 100 rows in the `yellow_taxi_trips` and `zones` tables with condition below.
+- Select more specific columns (`tpep_pickup_datetime, tpep_dropoff_datetime, total_amount`) instead of complete columns.
+- Use `JOIN` or `INNER JOIN` to display combinied columns.
+- Use slash (`/`) to seperate `Borough` and `Zone` info in combinied columns.
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/3.png" >
+  <p align="center">Query Result</p>
+</p>
+
+
+#### 4 Select first 100 rows  in the `yellow_taxi_trips` whose pick up location is null with condition below.
+- The specific columns : (`tpep_pickup_datetime, tpep_dropoff_datetime, total_amount, PULocationID, DOLocationID`)
+- This query should return an empty list.
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/4.png" >
+  <p align="center">Query Result</p>
+</p>
+
+
+#### 5 Select first 100 rows in the `yellow_taxi_trips` whose drop off location ID does not appear in the `zones` table with condition below.
+
+- This query should return an empty list
+
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/5.png" >
+  <p align="center">Query Result</p>
+</p>
+
+
+#### 6 Delete all rows in the `zones` table with `LocationID` of 142.
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/6.png" >
+  <p align="center">Query Result</p>
+</p>
+
+#### 7 Select first 100 rows in the `yellow_taxi_trips` and `zones` tables with condition below.
+- Use `Left Join` to show all rows from the "left" part of the statement but only the rows from the "right" part that overlap with the "left" part, thus the name.
+
+> Note : This join is useful if we deleted one of the LocationID rows like before. The inner join would omit some rows from the trips table, but this query will show all rows. However, since one ID is missing, the "virtual" columns we defined to transform location ID's to actual names will appear with empty strings if the query cannot find the location ID.
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/7.png" >
+  <p align="center">Query Result</p>
+</p>
+
+#### 8 Display first 100 rows and specific columns from `yellow_taxi_trips` with condition below.
+
+- Specific columns : (`tpep_pickup_datetime, tpep_dropoff_datetime, total_amount`)
+- Create new columns from trunctated `tpep_dropoff_datetime` and use `Day` as parameter to removes any smaller values (hours, minutes, seconds).
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/8.png" >
+  <p align="center">Query Result</p>
+</p>
+
+
+#### 9 Display first 100 rows and specific columns from `yellow_taxi_trips` with following condition below.
+
+- Specific columns : (`tpep_pickup_datetime, tpep_dropoff_datetime, total_amount`)
+- Create new columns called `day` from `tpep_pickup_datetime` with using `CAST` to convert `TIMESTAMP` type to `DATE`.
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/9.png" >
+  <p align="center">Query Result</p>
+</p>
+
+
+- Counts the amount of records in the trips table grouped by day.
+- Display ascending order from earliest to lastest day.
+
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/10.png" >
+  <p align="center">Query Result</p>
+</p>
+
+- Include the drop off location column and we group by it.
+>Note : Instead of having to repeat the same line in both the SELECT and GROUP BY parts, we can simply indicate the arguments we use after the SELECT keyword by order number. 
+
+<p align="center">
+  <img src="2_Images/6_SQL_Refresher/11.png" >
+  <p align="center">Query Result</p>
+</p>
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
+
+
 
 ### Homework Part 1
 
@@ -549,6 +662,9 @@ Note: it's not a typo, it's tip , not trip
 _[back to the top](#table-of-contents)_
 
 <br></br>
+
+GCP and Terraform
+==================
 
 ### GCP initial setup
 #### Comming Soon
