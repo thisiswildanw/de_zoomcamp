@@ -458,7 +458,7 @@ docker-compose up
 
 >Note: this command asumes that the `ny_taxi_postgres_data` used for mounting the volume is in the same directory as `docker-compose.yaml`.
 
-Since the settings for pgAdmin were stored within the container and we have killed the previous onem, we have to re-create the connection by following the steps [in this section](#connecting-pgadmin-and-postgres-with-docker-networking).
+Since the settings for pgAdmin were stored within the container and we have killed the previous onem, we have to re-create the connection by following the steps [in this section](https://github.com/thisiswildanw/de_zoomcamp/tree/master/Week_1_Introduction#connecting-pgadmin-and-postgres-with-docker).
 
 Press `Ctrl+C` in order to shut down the containers. The proper way of shutting them down is with this command:
 
