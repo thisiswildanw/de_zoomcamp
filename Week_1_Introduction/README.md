@@ -676,6 +676,7 @@ as our cloud services provider.
 ### Creating GCP Infrastructure with Terraform
 
 #### Initial Setup
+
 - Sign up for GCP and get $300, 90-day free trial.
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/1.png" >
@@ -685,22 +686,26 @@ as our cloud services provider.
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/2.png" >
   </p>
-- Fill first form with our project name (`dezoomcamp`) and select `Create`.
- <p align="center">
+- Fill first form with our project name (`dezoomcamp`) and select `Create`
+  <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/3.png" >
   </p>
-- Write down the `Project ID`, we need it for next step. 
 
-
+- Write down the `Project ID` , we need it for next step. 
 - Go to IAM (Identity and Access Management) > Service Accounts.
+  
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/4.png" >
   </p>
+  
   - Select `+ Create Service Account`, then provide a service account name. We will use `dtc-de-user`. Leave other fields with default values and click on `Create and Continue`.
+  
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/5.png" >
   </p>
+  
   - Grant viewer access for service account by click on `Basic` > `Viewer`. Then click `Done`
+  
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/6.png" >
   </p>
