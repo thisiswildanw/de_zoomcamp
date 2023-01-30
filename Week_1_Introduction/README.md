@@ -18,10 +18,9 @@ Table of Contents:
     - [SQL refresher](#sql-refresher)
     - [Homework Part 1](#homework-part-1)
 - [GCP and Terraform](#gcp-and-terraform)
-    - [GCP initial setup](#gcp-initial-setup)
-    - [GCP setup for access](#gcp-setup-for-access)
-    - [Terraform basics](#terraform-basics)
-    - [Creating GCP infrastructure with Terraform](#creating-gcp-infrastructure-with-terraform)
+    - [Introduction to Terraform](#introduction-to-terraform)
+    - [Creating GCP Infrastructure with Terraform](#creating-gcp-infrastructure-with-terraform)
+    - [Setting Up the Environment in Google Cloud](#setting-up-the-environment-in-google-cluod)
     - [Homework Part 2](#homework-part-2)
 
 
@@ -666,17 +665,48 @@ _[back to the top](#table-of-contents)_
 GCP and Terraform
 ==================
 
-### GCP initial setup
-#### Comming Soon
+### Introduction to Terraform 
+[Terraform](https://www.terraform.io
+) is open-source IaC (Infrastructure as Code) tool by HashiCorp. As IaC, it possible to build, change and manage our infrastructure like cloud service (GCP, AWS, Azure, etc) as an additional software component. 
 
-### GCP setup for access
-#### Comming Soon
+During this course we will use [Google Cloud Platform (GCP)](https://cloud.google.com)
+as our cloud services provider.
 
-### Terraform basics
-#### Comming Soon
 
-### Creating GCP infrastructure with Terraform
-#### Comming Soon
+### Creating GCP Infrastructure with Terraform
+
+#### Initial Setup
+- Sign up for GCP and get $300, 90-day free trial.
+  <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/1.png" >
+    <p align="center">GCP Dashboard</p>
+  </p>
+- Click `Select a project` to setup a new project.  
+  <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/2.png" >
+  </p>
+- Fill first form with our project name (`dezoomcamp`) and select `Create`.
+ <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/3.png" >
+  </p>
+- Write down the `Project ID`, we need it for next step. 
+
+
+- Go to IAM (Identity and Access Management) > Service Accounts.
+  <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/4.png" >
+  </p>
+  - Select `+ Create Service Account`, then provide a service account name. We will use `dtc-de-user`. Leave other fields with default values and click on `Create and Continue`.
+  <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/5.png" >
+  </p>
+  - Grant viewer access for service account by click on `Basic` > `Viewer`. Then click `Done`
+  <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/6.png" >
+  </p>
+  
+### Setting Up the Environment in Google Cluod
+
 
 ### Homework Part 2
 
