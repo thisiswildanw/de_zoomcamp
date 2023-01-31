@@ -682,17 +682,22 @@ as our cloud services provider.
     <img src="2_Images/7_Creating_GCP_with_Terraform/1.png" >
     <p align="center">GCP Dashboard</p>
   </p>
-- Click `Select a project` to setup a new project.  
+- Setup new project by following this step:
+  - Click `Select a project` to setup a new project.  
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/2.png" >
   </p>
-- Fill first form with our project name (`dezoomcamp`) and select `Create`
+  - Fill first form with our project name (`dezoomcamp`) and select `Create`
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/3.png" >
   </p>
 
-- Write down the `Project ID` , we need it for next step. 
-- Go to IAM (Identity and Access Management) > Service Accounts.
+  - Write down the `Project ID` , we need it for next step. 
+
+  <br>
+
+- Setup a service account for this project and download the JSON authentication key files. 
+  - Go to IAM (Identity and Access Management) > Service Accounts.
   
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/4.png" >
@@ -709,11 +714,178 @@ as our cloud services provider.
   <p align="center">
     <img src="2_Images/7_Creating_GCP_with_Terraform/6.png" >
   </p>
-  
-### Setting Up the Environment in Google Cluod
 
+  - With the service account created, click on the `3 dots` below `Actions` and select `Manage keys`.
+  <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/7.png" >
+  </p>
+
+  - Select `Add Key`> `Create New Key`
+
+  <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/8.png" >
+  </p>
+
+  - Select `JSON` and click `Create`. The files will be downloaded to your computer. Save them to a folder and write down the path.
+
+  <p align="center">
+    <img src="2_Images/7_Creating_GCP_with_Terraform/9.png" >
+  </p>
+
+- Download the [GCP SDK](https://cloud.google.com/sdk/docs/quickstart) for local setup. Follow the instructions to install and connect to your account and project.
+
+- Set the environment variable to point to the auth keys. 
+  - The environment variable name is `GOOGLE_APPLICATION_CREDENTIALS`
+  - The value for the variable is the path to the json authentication file you downloaded previously.
+  - Check how to assign environment variables in your system and shell. In bash, the command should be: 
+  `export GOOGLE_APPLICATION_CREDENTIALS="<path/to/authkeys>.json`
+  -Refresh the token and verify the authentication with the GCP SDK: 
+  `gcloud auth application-default login`
+
+#### Setup GCP Access
+We need to setup access first by assigning the `Storage Admin`, `Storage Object Admin`, `BigQuery Admin` and `Viewer` IAM roles to the `Service Account`, and then enable the `iam` and `iamcredentials APIs` for our project by following this step : 
+
+- On the GCP Project `dashboard`, go to `IAM & Admin` > `IAM`
+- Click the pencil next to the service account we just created.
+- Add the following roles and click on Save afterwards: 
+  - `Storage Admin`: for creating and managing buckets.
+  - `Storage Object Admin`: for creating and managing objects within the buckets.
+  - `BigQuery Admin`: for managing BigQuery resources and data.
+  - `Viewer` : should already be present as a role.
+- Enable APIs for the project (these are needed so that Terraform can interact with GCP): 
+  - [Identity and Access Management (IAM) API](https://console.cloud.google.com/apis/library/iam.googleapis.com)
+  - [IAM Service Account Credentials API](https://console.cloud.google.com/apis/library/iamcredentials.googleapis.com)
+
+#### Setup Terraform Files
+>Note: If you hasn't installed terraform yet, then follow this instructions [here](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+
+
+- Setup `main.tf` is required to define the resources needed.  
+
+  ```
+
+  terraform {
+    required_version = ">= 1.0"
+    backend "local" {}  # Can change from "local" to "gcs" (for google) or "s3" (for aws), if you would like to preserve your tf-state online
+    required_providers {
+      google = {
+        source  = "hashicorp/google"
+      }
+    }
+  }
+
+  provider "google" {
+    project = var.project
+    region = var.region
+    // credentials = file(var.credentials)  # Use this if you do not want to set env-var GOOGLE_APPLICATION_CREDENTIALS
+  }
+
+  # Data Lake Bucket
+  # Ref: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket
+  resource "google_storage_bucket" "data-lake-bucket" {
+    name          = "${local.data_lake_bucket}_${var.project}" # Concatenating DL bucket & Project name for unique naming
+    location      = var.region
+
+    # Optional, but recommended settings:
+    storage_class = var.storage_class
+    uniform_bucket_level_access = true
+
+    versioning {
+      enabled     = true
+    }
+
+    lifecycle_rule {
+      action {
+        type = "Delete"
+      }
+      condition {
+        age = 30  // days
+      }
+    }
+
+    force_destroy = true
+  }
+
+  # DWH
+  # Ref: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_dataset
+  resource "google_bigquery_dataset" "dataset" {
+    dataset_id = var.BQ_DATASET
+    project    = var.project
+    location   = var.region
+  }
+
+  ```
+
+- Setup `variables.tf` is required to defines runtime arguments that will be passed to terraform. Default values can be defined in which case a run time argument is not required.
+
+  ```
+  locals {
+    data_lake_bucket = "dtc_data_lake"
+  }
+
+  variable "project" {
+    description = "Your GCP Project ID"
+  }
+
+  variable "region" {
+    description = "Region for GCP resources. Choose as per your location: https://cloud.google.com/about/locations"
+    default = "us-central1"
+    type = string
+  }
+
+  variable "storage_class" {
+    description = "Storage class type for your bucket. Check official docs for more info."
+    default = "STANDARD"
+  }
+
+  variable "BQ_DATASET" {
+    description = "BigQuery Dataset that raw data (from GCS) will be written to"
+    type = string
+    default = "trips_data_all"
+  }
+  ```
+- Executions: 
+
+```
+# Refresh service-account's auth-token for this session
+gcloud auth application-default login
+```
+```
+# Initialize state file (.tfstate)
+terraform init
+```
+
+```
+# Check changes to new infra plan
+terraform plan -var="project=<your-gcp-project-id>"
+```
+```
+# Create new infra
+terraform apply -var="project=<your-gcp-project-id>"
+```
+```
+# Delete infra after your work, to avoid costs on any running services
+terraform destroy
+```
+
+<blockquote>
+
+There are a number of terraform commands that must be followed:
+- `terraform init` : initialize your work directory by downloading the necessary providers/plugins.
+- `terraform fmt (optional)`: formats your configuration files so that the format is consistent.
+- `terraform validate (optional)`: returns a success message if the configuration is valid and no errors are apparent.
+- `terraform plan` : creates a preview of the changes to be applied against a remote state, allowing you to review the changes before applying them.
+- `terraform apply` : applies the changes to the infrastructure.
+- `terraform destroy` : removes your stack from the infrastructure.
+
+</blockquote>
+
+### Setting Up the Environment in Google Cloud]
+(Comming Soon)
 
 ### Homework Part 2
+(Comming Soon)
+
 
 _[back to the top](#table-of-contents)_
 
