@@ -77,7 +77,6 @@ If you have installed Perfect, Lets try it to orchestrate `ingest_data.py` on[pr
     from prefect import flow, task
     from prefect.tasks import task_input_hash
 
-
     @task(log_prints=True, retries=3, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
     def extract_data(url):
         #download parquet file
@@ -102,7 +101,6 @@ If you have installed Perfect, Lets try it to orchestrate `ingest_data.py` on[pr
 
     @task(log_prints=True, retries=3)
     def ingest_data(user, password, host, port, db, table_name, df):
-
         #create engine variable
         engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
 
@@ -126,7 +124,9 @@ If you have installed Perfect, Lets try it to orchestrate `ingest_data.py` on[pr
             except StopIteration:
                 print("Ingestion Failed!")
 
-
+    @flow(name="Subflow", log_prints=True)
+    def log_subflow(table_name:str):
+        print("Logging Subflow for: {table_name}")
 
     @flow(name="Ingest Flow")
     def main_flow(): 
@@ -138,9 +138,10 @@ If you have installed Perfect, Lets try it to orchestrate `ingest_data.py` on[pr
         table_name = "yellow_taxi_data"
         url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2021-01.parquet"
 
-        raw_data = ingest_data(url)
+        log_subflow(table_name)
+        raw_data = extract_data(url)
         data = transform_data(raw_data)
-        ingest_data = (user,password, host, port, db, table_name, data)
+        ingest_data(user,password, host, port, db, table_name, data)
 
     if __name__ == '__main__':
         main_flow()
