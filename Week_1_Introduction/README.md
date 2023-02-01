@@ -541,9 +541,8 @@ Below are a series of SQL query examples to remember how to querying SQL. There 
 
 > Note : This join is useful if we deleted one of the LocationID rows like before. The inner join would omit some rows from the trips table, but this query will show all rows. However, since one ID is missing, the "virtual" columns we defined to transform location ID's to actual names will appear with empty strings if the query cannot find the location ID.
 
-<p align="center">
-  <img src="2_Images/6_SQL_Refresher/7.png" >
-  <p align="center">Query Result</p>
+<p align="center">Table of Contents: 
+=================
 </p>
 
 #### 8 Display first 100 rows and specific columns from `yellow_taxi_trips` with condition below.
