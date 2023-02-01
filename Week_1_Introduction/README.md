@@ -26,7 +26,7 @@ Table of Contents:
 
 Introduction to Data Engineering
 ================================
-[**Data Engineering**](hhttps://www.coursera.org/articles/what-does-a-data-engineer-do-and-how-do-i-become-one)is the practice of designing and building systems for collecting, storing, and analyzing data at scale. 
+[**Data Engineering**](hhttps://www.coursera.org/articles/what-does-a-data-engineer-do-and-how-do-i-become-one) is the practice of designing and building systems for collecting, storing, and analyzing data at scale. 
 
 
 Docker and Postgres
@@ -299,7 +299,7 @@ _[back to the top](#table-of-contents)_
 
 ### Putting Ingestion Script with Docker
 
-First, we need to export our existed Jupyter Notebook `explore_ingest_data.ipynb`(1_Code/4_Putting_Ingestion_Script_to_Docker/explore_ingest_data.ipynb) with this following command:
+First, we need to export our existed Jupyter Notebook [`explore_ingest_data.ipynb`](1_Code/4_Putting_Ingestion_Script_to_Docker/explore_ingest_data.ipynb) with this following command:
 
 ```
 jupyter nbconvert --to=script explore_ingest_data.ipynb
