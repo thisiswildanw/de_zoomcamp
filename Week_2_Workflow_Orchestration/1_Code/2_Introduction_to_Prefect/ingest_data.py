@@ -5,27 +5,36 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
 from time import time
+from datetime import timedelta
+from prefect import flow, task
+from prefect.tasks import task_input_hash
 
-def main(params):
-    #get parameter
-    user = params.user
-    password = params.password
-    host = params.host
-    port = params.port
-    db = params.db
-    table_name = params.table_name
-    url = params.url
-    file_name = 'yellow_tripdata_2021-01.parquet'
-
+@task(log_prints=True, retries=3, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+def extract_data(url):
     #download parquet file
     os.system(f"wget {url}")
 
-    #create engine variable
-    engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
+    #extract file_name
+    #WARNING: script below is used only for this specific url
+    file_name = url.split("/")[-1] 
 
     #read parquet using pandas
     df = pd.read_parquet(file_name)
 
+    return df
+
+@task(log_prints=True)
+def transform_data(df):
+    print(f"pre:missing passenger count: {df['passenger_count'].isin([0]).sum()}")
+    df = df[df['passenger_count'] !=0]
+    print(f"pre:missing passenger count: {df['passenger_count'].isin([0]).sum()}")
+    return df
+
+
+@task(log_prints=True, retries=3)
+def ingest_data(user, password, host, port, db, table_name, df):
+    #create engine variable
+    engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
 
     #try to create schema if exist, then replace it
     df.head(n=0).to_sql(name=table_name, con=engine, if_exists='replace')
@@ -47,19 +56,24 @@ def main(params):
         except StopIteration:
             print("Ingestion Failed!")
 
+@flow(name="Subflow", log_prints=True)
+def log_subflow(table_name:str):
+    print("Logging Subflow for: {table_name}")
+
+@flow(name="Ingest Flow")
+def main_flow(): 
+    user = "root"
+    password = "root"
+    host = "localhost"
+    port = "5432"
+    db = "ny_taxi"
+    table_name = "yellow_taxi_data"
+    url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2021-01.parquet"
+
+    log_subflow(table_name)
+    raw_data = extract_data(url)
+    data = transform_data(raw_data)
+    ingest_data(user,password, host, port, db, table_name, data)
 
 if __name__ == '__main__':
-    # Parse the command line arguments and calls the main program
-    parser = argparse.ArgumentParser(description='Ingest Parquet data to Postgres')
-
-    parser.add_argument('--user', help='user name for postgres')
-    parser.add_argument('--password', help='password for postgres')
-    parser.add_argument('--host', help='host for postgres')
-    parser.add_argument('--port', help='port for postgres')
-    parser.add_argument('--db', help='database name for postgres')
-    parser.add_argument('--table_name', help='name of the table where we will write the results to')
-    parser.add_argument('--url', help='url of parquet file')
-
-    args = parser.parse_args()
-
-    main(args)
+    main_flow()
