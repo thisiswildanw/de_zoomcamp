@@ -2,7 +2,7 @@
 
 ### Note : 
 - [Week 1 Introduction](https://github.com/thisiswildanw/de_zoomcamp/tree/master/Week_1_Introduction)
-- Week 2 (Comming Soon)
+- [Week 2 Workflow Orchestration](https://github.com/thisiswildanw/de_zoomcamp/tree/master/Week_2_Workflow_Orchestration)
 
 ### Homework :
 - [Week 1 Part-1 Docker & SQL Query](https://github.com/thisiswildanw/de_zoomcamp/tree/master/Week_1_Introduction#homework-part-1)
