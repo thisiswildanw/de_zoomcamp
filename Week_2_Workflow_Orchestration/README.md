@@ -2,7 +2,9 @@ Week 2 Workflow Orchestration
 =============================
 
 > Next: (Comming Soon)
+
 > Previous: [Week 1 Introduction](https://github.com/thisiswildanw/de_zoomcamp/tree/master/Week_1_Introduction)
+
 > [Back to Start Page](https://github.com/thisiswildanw/de_zoomcamp)
 
 Table of Contents: 
@@ -56,12 +58,12 @@ If you haven't installed **Prefect** yet, follow this [link](https://docs.prefec
 
 We recommend this version to install: 
 - prefect==2.7.7
-- prefect-sqlalchemy==0.2.3
+- prefect-sqlalchemy==0.2.2
 - prefect-gcp[cloud_storage]==0.2.3
 
 </Blockquote>
 
-If you have installed Perfect, Lets try it to orchestrate `ingest_data.py` on[previous](https://github.com/thisiswildanw/de_zoomcamp/tree/master/Week_1_Introduction#ingesting-nyc-taxi-data-to-postgres-with-python) lesson : 
+If you have installed Perfect, Lets try it to orchestrate `ingest_data.py` on [previous](https://github.com/thisiswildanw/de_zoomcamp/tree/master/Week_1_Introduction#ingesting-nyc-taxi-data-to-postgres-with-python) lesson : 
 
 - First lets modify our `ingest_data.py` :
   ```python
