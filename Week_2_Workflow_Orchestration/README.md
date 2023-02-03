@@ -392,10 +392,9 @@ In this lesson, we will try to implement ETL (extract, transform, load) process 
     </p>
     <br>
 
-16. Check the result on cloud bucket below. The `parquet` file was **successfully** uploaded to GCS via Prefect & Python. 
+16. Check the result on cloud bucket in images below and you can see `parquet` file was **successfully** uploaded to GCS via Prefect & Python. 
 
     <p align="center">
-    <img src="2_Images    <p align="center">
     <img src="2_Images/3_ETL_GCP_Prefect/5.png" >
     </p>
 
