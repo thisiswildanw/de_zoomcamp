@@ -374,7 +374,7 @@ In this lesson, we will try to implement ETL (extract, transform, load) process 
     etl_web_to_gcs()
     ```
 
-15. Execute `etl_web_to_gcs.py` by following this command : `python etl_web_to_gcs.py`.
+15. Execute [`etl_web_to_gcs.py`](/Week_2_Workflow_Orchestration/1_Code/3_ETL_GCP_Prefect/etl_web_to_gcs.py) by following this command : `python etl_web_to_gcs.py`.
 
     <p align="center">
     <img src="2_Images/3_ETL_GCP_Prefect/4.png" >
@@ -391,16 +391,6 @@ In this lesson, we will try to implement ETL (extract, transform, load) process 
 _[back to the top](#table-of-contents)_
 
 <br></br>
-
-
-
-
-
-
-
-
-
-
 
 From Google Cloud Storage to Big Query 
 ======================================
