@@ -258,6 +258,149 @@ _[back to the top](#table-of-contents)_
 ETL with GCP & Perfect
 ======================
 
+In this lesson, we will try to implement ETL (extract, transform, load) process to Google Cloud (Storage) using Python & Prefect by following this step:
+
+1. Intstall required libraries on [requirements.txt](/Week_2_Workflow_Orchestration/1_Code/3_ETL_GCP_Prefect/requirements.txt) using `pip install -r requirements.txt`.
+
+2. Run Prefect on terminal using `prefect orion start`. Dont forget to check out Prefect dashboard at `https://127.0.0.1:4200`.
+
+3. Open VScode or another code editor. We will using `Python` as basic programming language. 
+
+4. Create new python tab, and name it as `etl_web_to_gcs.py`. 
+
+5. Import required function: 
+
+    ```python
+    from pathlib import
+    import pandas as pd
+    from prefect import flow, task
+    from prefect_gcp.cloud_storage import GcsBucket
+    ```
+
+6. Create Prefect `task` to get dataset from repositories, then read and return it as `dataframe`.
+    In this lesson, we are using Januray 2021 NYC Yellow Taxi data with (`.csv`) format from [Data Engineering Zoomcamp repository](https://github.com/DataTalksClub/nyc-tlc-data). 
+    
+    The url : ```https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz```
+
+    Python code:
+    ```python
+    @task(retries=3)
+    def get_data(url:str):
+        df = pd.read_csv()
+        return df 
+    ```
+
+7. Create Prefect `task` to fix data types issue of `tpep_pickup_datetime` and `tpep_dropoff_datetime"`columns, then return it as cleaned `dataframe`. 
+
+    Python code:
+    ```python
+    @task()
+    def clean(df = pd.DataFrame):
+        df["tpep_pickup_datetime"] = pd.to_datetime(df["tpep_pickup_datetime"] )
+        df["tpep_dropoff_datetime"] = pd.to_datetime(df["tpep_pickup_datetime"] )
+        return df
+    ```
+
+8. Create Prefect `task` to export our cleaned `dataframe` and write it to `.parquet` file and store it to our local storage.
+
+9. Setting up Google Cloud Storage. 
+    - Go to ```concole.cloud.google.com```.
+    - Click `Navigation Bar` (The Hamburger Icon), Click `Cloud Storage` > `Bucket`.
+    <p align="center">
+    <img src="2_Images/3_ETL_GCP_Prefect/1.png" >
+    </p>
+    <br>
+
+    - Select `+ Create`, if you dont have any cloud buckets.
+        - Fill the first form with your bucket name, we choice `prefect-test-de`
+        - Keep it default for the rest form.
+        - Click `CREATE`. 
+
+        <p align="center">
+        <img src="2_Images/3_ETL_GCP_Prefect/2.png" >
+        </p>
+        <br>
+
+
+10. Access configuration. We have created  `google service account` on [previous lesson](#introduction-to-perfect-concepts). Let use it. 
+
+    >Note : Make sure that you have given `Biguery Admin`, `Storage Admin` role permission to your `service account`. 
+
+12. GCS Bucket Block configuration on Prefect UI. 
+    Lets make a block: 
+    - Check out the dashboard at `https://127.0.0.1:4200`.
+    - Click `Navigation Bar` (The Hamburger Button), then click `Blocks` > `+`.
+    - Find `GCS Bucket` on search form. Click `Add +`.
+    - Fill first form with your block name. 
+    - Name the scond form with your bucket name. 
+    - On GCP Credentials menu, copy-paste all your `service account` information as `dictionaries` to `service account info` form. 
+    - Keep the rest empty, then click `Create`.
+        <p align="center">
+        <img src="2_Images/3_ETL_GCP_Prefect/3.png" >
+        </p>
+        <br>
+
+13. Create Prefect `task` to upload `parquet` file to Google Cloud Storage.
+    Python code:
+    ```Python
+    @task()
+    def write_gcs(path):
+        gcs_block = GcsBucket.load("prefect-gcs")
+        gcs_block.upload_from_path(
+            from_path=f"{path}",
+            to_path=path
+    )
+    ```
+
+14. Combine all task and create Prefect flow using `@flow` as main function `etl_web_gcs()` . 
+    
+    Python code:
+    ```Python
+
+    @flow(log_prints=True)
+    def etl_web_to_gcs():
+        color   = "yellow"
+        year    = 2021
+        month   = 1
+        dataset_file=f"{color}_tripdata_{year}-{month:02}"
+        dataset_url= f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{dataset_file}.csv.gz"
+        
+        df = get_data(dataset_url)
+        cleaned_df = clean(df)
+        path = write_local(cleaned_df, color, dataset_file)
+        write_gcs(path)
+    
+    if __name__ == "__main__":
+    etl_web_to_gcs()
+    ```
+
+15. Execute `etl_web_to_gcs.py` by following this command : `python etl_web_to_gcs.py`.
+
+    <p align="center">
+    <img src="2_Images/3_ETL_GCP_Prefect/4.png" >
+    </p>
+    <br>
+
+16. Check the result on cloud bucket below. The `parquet` file was **successfully** uploaded to GCS via Prefect & Python. 
+
+    <p align="center">
+    <img src="2_Images    <p align="center">
+    <img src="2_Images/3_ETL_GCP_Prefect/5.png" >
+    </p>
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
+
+
+
+
+
+
+
+
+
+
 
 From Google Cloud Storage to Big Query 
 ======================================
