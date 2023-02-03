@@ -303,6 +303,17 @@ In this lesson, we will try to implement ETL (extract, transform, load) process 
 
 8. Create Prefect `task` to export our cleaned `dataframe` and write it to `.parquet` file and store it to our local storage.
 
+    Python code:
+    ```python
+    @task(log_prints=True)
+    def write_local(df, color, dataset_file):
+        path = Path(f"data/{color}/{dataset_file}.parquet")
+
+        df.to_parquet(path, compression="gzip")
+        return path
+    ```
+
+
 9. Setting up Google Cloud Storage. 
     - Go to ```concole.cloud.google.com```.
     - Click `Navigation Bar` (The Hamburger Icon), Click `Cloud Storage` > `Bucket`.
