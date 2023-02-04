@@ -271,7 +271,7 @@ In this lesson, we will try to implement ETL (extract, transform, load) process 
 5. Import required function: 
 
     ```python
-    from pathlib import
+    from pathlib import Path
     import pandas as pd
     from prefect import flow, task
     from prefect_gcp.cloud_storage import GcsBucket
@@ -404,6 +404,152 @@ _[back to the top](#table-of-contents)_
 
 From Google Cloud Storage to Big Query 
 ======================================
+
+We have learned how to extract, transform data and load it to Google Cloud Storage. In this lesson we will try to extract data from Google Cloud Storage, transform it and load it directly to Google BigQuery using Python and Prefect by following this step: 
+
+1. Open VScode or another code editor. We will using `Python` as basic programming language. 
+
+2. Create new python tab, and name it as `etl_gcs_to_bq.py`. 
+
+3. Import required function.
+
+    Python Code: 
+
+    ```python
+    from pathlib import Path
+    import pandas as pd
+    from prefect import flow, task
+    from prefect_gcp.cloud_storage import GcsBucket
+    from prefect_gcp import GcpCredentials
+    ```
+
+4. Create Prefect `task` to extract `parquet` data from google cloud storage that was uploaded in the previous lesson, save it to local storage and return it as `file path`. 
+
+    Python Code:
+
+    ```Python
+    @task(log_prints=True, retries=3, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+    def extract_from_gcs(color, year, month ):
+        gcs_path=f"data/{color}/{color}_tripdata_{year}-{month:02}.parquet"
+        gcs_block= GcsBucket.load("prefect-gcs")
+        gcs_block.get_directory(from_path=f"{gcs_path}", local_path=f"../data/")
+        return Path(f"../data/{gcs_path}")
+    ```
+
+5. Create Prefect `task` to convert `null` value in `passenger_count` column and count it rows before and after converted, then return it as `dataframe`.
+
+    ```Python
+    @task(log_prints=True, retries=3)
+    def transform(path):
+        df = pd.read_parquet(path)
+        print (f"pre: missing passenger count : {df['passenger_count'].isna().sum()}")
+        df['passenger_count'].fillna(0, inplace=True)
+        print (f"post: missing passenger count : {df['passenger_count'].isna().sum()}")
+        return df
+    ```
+
+6. Setting up Google Big Query. We need it to create empty table as fast as posible for new data.  
+    - Go to ```concole.cloud.google.com```.
+    - Click `Navigation Bar` (The Hamburger Icon), Click `Google BigQuery`.
+    - If you don have any database, click 3 dots button on the right project id. Then click `Create dataset`.
+        <p align="center">
+        <img src="2_Images/4_ETL_GCS_to_BQ/1.png" >
+        </p>
+        <br>
+
+
+    - Name it whatever you want. We choose `test_bq`.
+        <p align="center">
+        <img src="2_Images/4_ETL_GCS_to_BQ/2.png" >
+        </p>
+        <br>
+    - On the right `test_bq` click 3 dots button, then click `Create table`.
+        - Name it whatever you want. We choose `test_bq`.
+        <p align="center">
+        <img src="2_Images/4_ETL_GCS_to_BQ/3.png" >
+        </p>
+        <br>
+
+        - Select `Google Cloud Storage` on first form. 
+        - In the next selection form, Select `browser` > `prefect-test-de` bucket > `data` > `yellow` > select `yellow_tripdata_2021-01.parquet` filename. 
+        - Fill table name whatever you want. We choose `yellow_trips_21_01`.
+        - Keep other form as default, then click `Create Table`.
+             <p align="center">
+             <img src="2_Images/4_ETL_GCS_to_BQ/4.png" >
+             </p>
+             <br>
+
+7. The current `yellow_trips_21_01` table has null value on `passenger_count` column. We will truncate the table using `SQL Query` and write new table value to `yellow_trips_21_01` on BigQuery via Prefect `task`.
+    - Open `Query Editor` by click 3 dots button on the right table name. 
+      <p align="center">
+      <img src="2_Images/4_ETL_GCS_to_BQ/5.png" >
+      </p>
+      <br>
+    - Run this `SQL Query` : `TRUNCATE TABLE 'test_bq.yellow_trips_21_01'`.
+      <p align="center">
+      <img src="2_Images/4_ETL_GCS_to_BQ/6.png" >
+      </p>
+      <br>
+    - Create Prefect `task` on `etl_gcs_to_bq.py` to write modified `dataframe` and load it to `BigQuery` as end point.
+
+        Python Code: 
+        ```Python 
+        @task(log_prints=True,retries=3)
+        def write_to_bq(df):
+            gcp_credentials_block = GcpCredentials.load("prefect-bq")
+
+            df.to_gbq(
+                destination_table="test_bq.yellow_trips_21_01",
+                credentials = gcp_credentials_block.get_credentials_from_service_account(),
+                project_id = "dezoomcamp-376313",
+                chunksize = 500000,
+                if_exist="append"
+            )
+        ```
+8. Create Prefect `flow` to run all Prefect `task` from `extract_from_gcs()` > `transform()` > `write_to_bq`. 
+
+    ```Python
+    @flow(log_prints=True, retries=3)
+    def etl_gcs_to_bq():
+        color   = "yellow"
+        year    = 2021
+        month   = 1
+
+        path = extract_from_gcs(color, year, month)
+        df = transform(path)
+        write_to_bq(df)
+
+    if __name__ == "__main__":
+        etl_gcs_to_bq()
+    ```
+
+9. Execute [`etl_gcs_to_bq.py`](/Week_2_Workflow_Orchestration/1_Code/4_ETL_GCS_to_BQ/etl_gcs_to_bq.py) by following this command : `python etl_gcs_to_bq.py`.
+      <p align="center">
+      <img src="2_Images/4_ETL_GCS_to_BQ/7.png" >
+      </p>
+      <br>
+
+10. Check out load process on Bigquery `Query Editor` by run following query below. Its succesfully showing **1,369,765** row size.
+
+    ```SQL
+    SELECT
+        COUNT(1) ROW_SIZE
+    FROM
+        `test_bq.yellow_trips_21_01`
+    WHERE 
+        passenger_count IS NOT NULL;
+    ```
+    Query Result: 
+
+    <p align="center">
+    <img src="2_Images/4_ETL_GCS_to_BQ/8.png" >
+    </p>
+    <br>
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
+
 
 Parameterizing Flow & Deployments with ETL into GCS Flow 
 ========================================================
