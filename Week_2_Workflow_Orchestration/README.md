@@ -467,7 +467,56 @@ We have learned how to extract, transform data and load it to Google Cloud Stora
         - Name it whatever you want. We choose `test_bq`.
         <p align="center">
         <img src="2_Images/4_ETL_GCS_to_BQ/3.png" >
-        </p>
+        </p>from pathlib import Path
+import pandas as pd
+from prefect import flow, task
+from prefect.tasks import task_input_hash
+from datetime import timedelta
+from prefect_gcp.cloud_storage import GcsBucket
+
+@task(retries=3,log_prints=True, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+def get_data(url:str):
+    df = pd.read_csv(url)
+    return df 
+
+
+@task(log_prints=True, )
+def clean(df = pd.DataFrame):
+    df["tpep_pickup_datetime"] = pd.to_datetime(df["tpep_pickup_datetime"])
+    df["tpep_dropoff_datetime"] = pd.to_datetime(df["tpep_dropoff_datetime"])
+    return df
+
+@task(log_prints=True)
+def write_local(df, color, dataset_file):
+    path = Path(f"data/{color}/{dataset_file}.parquet")
+
+    df.to_parquet(path, compression="gzip")
+    return path
+
+@task()
+def write_gcs(path):
+    gcs_block = GcsBucket.load("prefect-gcs")
+    gcs_block.upload_from_path(
+        from_path=f"{path}",
+        to_path=path
+    )
+
+@flow(log_prints=True)
+def etl_web_to_gcs():
+    color   = "yellow"
+    year    = 2021
+    month   = 1
+    dataset_file=f"{color}_tripdata_{year}-{month:02}"
+    dataset_url= f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{dataset_file}.csv.gz"
+    
+    df = get_data(dataset_url)
+    cleaned_df = clean(df)
+    path = write_local(cleaned_df, color, dataset_file)
+    write_gcs(path)
+
+
+if __name__ == "__main__":
+    etl_web_to_gcs()
         <br>
 
         - Select `Google Cloud Storage` on first form. 
@@ -553,6 +602,30 @@ _[back to the top](#table-of-contents)_
 
 Parameterizing Flow & Deployments with ETL into GCS Flow 
 ========================================================
+
+In this lesson, We are going to learn how to add parameterization to Prefect flows and create deployment. 
+
+What is parameterizing? It means allowing your prefect flow to take parameters, so when we actually schedule it, it's not hard to coded anymore. 
+
+Here step-by-step using Python: 
+
+1. Create copy of [`etl_web_gcs.py`](/Week_2_Workflow_Orchestration/1_Code/3_ETL_GCP_Prefect/etl_web_to_gcs.py) and name it as [`parameterizing_flow.py`]. 
+
+2. On the first step, of course we add parameter to main function `etl_web_gcs()`.
+
+    Before : 
+    ```Python 
+    def etl_web_gcs():
+    ```
+
+    After : 
+    
+    ```Python 
+    def etl_web_gcs(year:int, month:int, color:str)-> None:
+    ``` 
+
+
+
 
 Schedules & Docker Storage with Infrastructure
 ===============================================
