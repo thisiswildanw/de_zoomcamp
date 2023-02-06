@@ -609,7 +609,7 @@ What is parameterizing? It means allowing your prefect flow to take parameters, 
 
 Here step-by-step using Python: 
 
-1. Create copy of [`etl_web_gcs.py`](/Week_2_Workflow_Orchestration/1_Code/3_ETL_GCP_Prefect/etl_web_to_gcs.py) and name it as [`parameterizing_flow.py`]. 
+1. Create copy of [`etl_web_gcs.py`](/Week_2_Workflow_Orchestration/1_Code/3_ETL_GCP_Prefect/etl_web_to_gcs.py) and name it as [`parameterizing_flow.py`](/Week_2_Workflow_Orchestration/1_Code/5_Parameterizing_Flow/parameterized_flow.py). 
 
 2. On the first step, of course we add parameter to main function `etl_web_gcs()`.
 
@@ -624,11 +624,77 @@ Here step-by-step using Python:
     def etl_web_gcs(year:int, month:int, color:str)-> None:
     ``` 
 
+3. Let create parent flow that's going to trigger `etl_web_gcs()` and repeat it three times for three different months.  
+    Pyhton Code:
+    ```Python
+    @flow()
+    def etl_parent_flow(
+        year:int, months: list[int], color:str
+        ):
+        for month in months:
+            etl_web_to_gcs(year, month, color)
+
+    if __name__ == "__main__":
+        color = "yellow"
+        months = [1,2,3]
+        year=2021
+        etl_parent_flow()
+    ```
+
+4. Run [`parameterized_flow.py`](/Week_2_Workflow_Orchestration/1_Code/5_Parameterizing_Flow/parameterized_flow.py) by following this command:
+    ```Python parameterized_flow.py ```
+
+6. Check out Prefect dashboard on `http://127.0.0.1:4200/flow-runs`. You see, `etl_parent_flow()` and all `etl_web_to_gcs()` function has successfully executed. 
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/1.png" >
+    </p>
+    <br>
+
+7. Go to Google Storage> `prefect-test-de` (my bucket)> `data` > `yellow`. You see in image below, that we have 3 different months yellow trip data in bucket. It mean, that `parameterized_flow.py` with additional parameter successfully uploading 3 `parquet` data (based of our input) to Google Storage. 
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/2.png" >
+    </p>
+    <br>
+
+We have learn how to `add parameterization` to `Prefect flow`, but running process is still manual and it is not a best practice. So, we need to learn how to create `Prefect deployment`. 
+
+What is it?. 
+
+Creating a `deployment` for a `Prefect` workflow means packaging workflow code, settings, and infrastructure configuration so that the workflow can be managed via the Prefect API and run it remotely.
+
+In this section, we will create Prefect deployement for `parameterized_flow.py` by following this step:
+
+1. Open directory where `paramerized_flow.py` stored via terminal. 
+
+2. Build a prefect deployment by running this command: 
+    `prefect deployment build parameterized_flow.py:etl_parent_flow -n "Parameterized ETL"`
+
+    You see, in image below that a `yaml` file has created. `yaml` file in this project store all of `parameterized_flow.py` metadata.  
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/3.png" >
+    </p>
+    <br>
+
+    Add year, months and color parameter in `etl_parent_flow-deployment.yaml`. Here the complete `yaml` file : 
+
+    ```Yaml
+
+
+    ```
+3. 
 
 
 
 Schedules & Docker Storage with Infrastructure
 ===============================================
 
+
+
+
 Perfect Cloud/Additional Resource
 =================================
+
+(Comming Soon)
