@@ -1,0 +1,54 @@
+###
+### A complete description of a Prefect Deployment for flow 'etl-parent-flow'
+###
+name: Parameterized ETL
+description: null
+version: a3c49c225ec46af4f93b83257ed3516c
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+tags: []
+parameters: {}
+schedule: null
+infra_overrides: {}
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  block_type_slug: process
+  _block_type_slug: process
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: etl-parent-flow
+manifest_path: null
+storage: null
+path: /home/thisiswildanw/project/de_zoomcamp/Week_2_Workflow_Orchestration/1_Code/5_Parameterizing_Flow
+entrypoint: parameterized_flow.py:etl_parent_flow
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    year:
+      title: year
+      position: 0
+      type: integer
+    months:
+      title: months
+      position: 1
+      type: array
+      items:
+        type: integer
+    color:
+      title: color
+      position: 2
+      type: string
+  required:
+  - year
+  - months
+  - color
+  definitions: null
