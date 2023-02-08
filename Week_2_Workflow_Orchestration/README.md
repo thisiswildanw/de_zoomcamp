@@ -20,6 +20,8 @@ Table of Contents:
 
 -[Week 2 Homework](#week-2-homework)
 
+-[Week 2 Homework](#week-2-homework)
+
 
 Data Lake
 =========
@@ -270,6 +272,7 @@ In this lesson, we will try to implement ETL (extract, transform, load) process 
 
 4. Create new python tab, and name it as `etl_web_to_gcs.py`. 
 
+5. Import required function: profobuf
 5. Import required function: profobuf
 
     ```python
@@ -744,7 +747,18 @@ In this section, we will create Prefect deployement for `parameterized_flow.py` 
     <img src="2_Images/5_Parameterizing_Flow/4.png" >
     </p>
     <br>
+3. Run `etl_parrent_flow-deployment.yaml` by following this command:
+    `prefect deployment apply etl_parent_flow-deployment.yaml`
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/4.png" >
+    </p>
+    <br>
 
+4. Ahha, lets check out our prefect deployment dashboard on `http://127.0.0.1:4200/deployments`, then select `etl-parent-flow/Parameterized ETL`. 
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/5.png" >
+    </p>
+    <br>
 4. Ahha, lets check out our prefect deployment dashboard on `http://127.0.0.1:4200/deployments`, then select `etl-parent-flow/Parameterized ETL`. 
     <p align="center">
     <img src="2_Images/5_Parameterizing_Flow/5.png" >
@@ -784,13 +798,154 @@ _[back to the top](#table-of-contents)_
 
 <br></br>
 
+5. The Prefect deployment has been running, but if you check `Work Queues` menu, it is in waiting state and not started yet. 
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/6.png" >
+    </p>
+    <br>
+
+    Lets start deployment job by following this command `prefect agent start --work-queue "default"`.
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/7.png" >
+    </p>
+    <br>
+
+    Open `Work Queues` menu. Well, it takes `5 minute 19 second` to complete `etl-parent-flow`.
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/8.png" >
+    </p>
+    <br>
+
+
+
+6. Dont forget to check our Google Storage Bucket. You see, that 3 different months yellow taxi data has stored. It meant, our Prefect successfully executed. 
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/9.png" >
+    </p>
+    <br>
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
+
 
 Schedules & Docker Storage with Infrastructure
 ===============================================
 
 In this lesson, we will learn how to schedulling flows and also running flow in docker containers. 
+In this lesson, we will learn how to schedulling flows and also running flow in docker containers. 
 
 #### Schedule Flow via UI
+#### Schedule Flow via UI
+
+So, first we will learn about schedulling flows by following step below: 
+
+1. Check out Prefect deployment dashboard at `http://127.0.0.1:4200/deployments`. Click `Parameterized ETL`, then `Add` schedule. 
+
+    <p align="center">
+    <img src="2_Images/6_Schedulling_and_Containerizing/1.png" >
+    </p>
+    <br>
+
+    In add schedule menu below, you see that we can manage schedule type based `Interval`, `Cron` and `Rrule`. Moreover, we can set time zone and it really helpful to schedule flow wherever country we are. 
+    
+    <p align="center">
+    <img src="2_Images/6_Schedulling_and_Containerizing/2.png" >
+    </p>
+    <br>
+
+    In this section, we try to set every five minute to run this prefect deployment. You can change it whatever you want.
+    
+    <p align="center">
+    <img src="2_Images/6_Schedulling_and_Containerizing/3.png" >
+    </p>
+    <br>
+
+2.  You can also schedule flow when creating deployment. Check this [link](https://docs.prefect.io/concepts/schedules/) for more information.
+
+<br>
+
+#### Running Flows In Docker Container
+
+We can put our Prefect flow code in lots of different place, so far we have running locally on our machine and that's been nice for getting started. But, if we want to make things a little bit more production ready and have other people be able to access our flow code storage we could put it on version control system (github, gitlab, etc), we could do it with Cloud (AWS S3, Google Cloud Storage, Azure Blob Storage) so we have a lot of options. 
+
+In this section, we going to store our code in a Docker image and put it up on Docker Hub and then when we run a Docker container that code will be right there by following this step: 
+
+1. Create `Dockerfile`. 
+    ```Dockerfile
+    FROM prefecthq/prefect:2.7.7-python3.9
+
+    COPY requirements.txt .
+
+    RUN pip install -r requirements.txt --trusted-host pypi.python.org --no-cache-dir
+
+    COPY flows /opt/prefect/flows
+    COPY data /opt/prefect/data
+
+    ```
+2. Create requirements.txt
+    
+    ```
+    pandas==1.5.2
+    prefect==2.7.7
+    prefect-gcp[cloud_storage]==0.2.3
+    profobuf==4.21.11
+    pyarrow==10.0.1
+    ```
+
+3. Build `Dockerfile` image by following this command `docker image build -t try/prefect:zoomcamp .`
+
+4. Let's push that all up to Docker Hub, so anyone can access it there. 
+    - Create docker container block:
+        - Go to prefect block in navigation manu.
+        - Add new block, select `Docker Container`.
+        - Name your block, whatever you want. 
+        - Add Docker Tage of your docker image.
+        - Select `ALWAYS` in your image pull policy form.
+        - Click `Create`.
+    
+    - We also can craete docker block via pyton programming by following this code:
+        ```Pyhton
+        from prefect.infrastucture.docker import DockerContainer
+
+        docker_block = DockerContainer(
+            image="try/prefect:zoomcamp
+            image_pull_policy="ALWAYS"
+            auto_remove=True
+        )
+
+        docker_block.save("zoom", overwrite=True)
+
+        ```
+5. Create prefect deployment, in this section we will create it via python:
+    ```Python
+    from prefect.deployments import Deployment
+    from prefect.infrastructure.docker import DockerContainer
+    from parameterized_flow import etl_parent_flow
+
+    docker_block= DockerContainer.load("zoomcamp")
+
+    docker_dep = Deployment.build_from_flow(
+        flow=etl_parent_flow,
+        name="docker-flow",
+        infrastructure=docker_block
+    )
+    if __name__ == "__main__":
+        docker_dep.apply()
+    ```
+6. Start `default` agent by following this command on CLI:
+    `prefect agent start -q default`
+
+7. Run the deployement queue: 
+    `prefect deployment run etl-parent-flow/docker-flow`
+
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
 
 So, first we will learn about schedulling flows by following step below: 
 
