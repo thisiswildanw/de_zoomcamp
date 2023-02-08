@@ -17,10 +17,7 @@ Table of Contents:
 - [Parameterizing Flow & Deployments with ETL Into GCS Flow](#parameterizing-flow--deployments-with-etl-into-gcs-flow)
 - [Schedules & Docker Storage with Infrastructure](#schedules--docker-storage-with-infrastructure) 
 - [Perfect Cloud/Additional Resource](#perfect-cloudadditional-resource)
-
--[Week 2 Homework](#week-2-homework)
-
--[Week 2 Homework](#week-2-homework)
+- [Week 2 Homework](#week-2-homework)
 
 
 Data Lake
