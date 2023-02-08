@@ -1102,7 +1102,7 @@ Make any other necessary changes to the code for it to function as required.
 Create a deployment for this flow to run in a local subprocess with local flow code storage (the defaults).
 
 Make sure you have the parquet data files for Yellow taxi data for Feb. 2019 and March 2019 loaded in GCS. Run your deployment to append this data to your BiqQuery table. How many rows did your flow code process?
-#### Answer : 14,851,920
+#### Answer : 14,851,920 (A)
 
 - Python Code:
     ```Python
@@ -1249,6 +1249,8 @@ Make sure you have the parquet data files for Yellow taxi data for Feb. 2019 and
     type: object
     properties:
         color:
+
+
         title: color
         position: 0
         year:
@@ -1320,7 +1322,7 @@ How many rows were processed by the script?
     <img src="3_Homework/images/11.png" >
     </p>
     <br>
-- Result : 88605
+- Result : 88605(C)
 
     <p align="center">
     <img src="3_Homework/images/12.png" >
@@ -1377,7 +1379,7 @@ How many rows were processed by the script?
     </p>
     <br>
 
--Row Size = 154,392
+-Row Size = 514,392
     <p align="center">
     <img src="3_Homework/images/15.png" >
     </p>
@@ -1387,11 +1389,12 @@ How many rows were processed by the script?
 ### Question 6. Secrets
 Prefect Secret blocks provide secure, encrypted storage in the database and obfuscation in the UI. Create a secret block in the UI that stores a fake 10-digit password to connect to a third-party service. Once you’ve created your block in the UI, how many characters are shown as asterisks (*) on the next page of the UI?
 
-#### Answer : 8
-    <p align="center">
-    <img src="3_Homework/images/16.png" >
-    </p>
-    <br>
+#### Answer : 8 (C)
+    
+<p align="center">
+<img src="3_Homework/images/16.png" >
+</p>
+<br>
 
 
 
