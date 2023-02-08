@@ -18,6 +18,8 @@ Table of Contents:
 - [Schedules & Docker Storage with Infrastructure](#schedules--docker-storage-with-infrastructure) 
 - [Perfect Cloud/Additional Resource](#perfect-cloudadditional-resource)
 
+-[Week 2 Homework](#week-2-homework)
+
 
 Data Lake
 =========
@@ -268,7 +270,7 @@ In this lesson, we will try to implement ETL (extract, transform, load) process 
 
 4. Create new python tab, and name it as `etl_web_to_gcs.py`. 
 
-5. Import required function: 
+5. Import required function: profobuf
 
     ```python
     from pathlib import Path
@@ -736,17 +738,424 @@ In this section, we will create Prefect deployement for `parameterized_flow.py` 
         - color
         definitions: null
     ```
-3. 
+3. Run `etl_parrent_flow-deployment.yaml` by following this command:
+    `prefect deployment apply etl_parent_flow-deployment.yaml`
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/4.png" >
+    </p>
+    <br>
 
+4. Ahha, lets check out our prefect deployment dashboard on `http://127.0.0.1:4200/deployments`, then select `etl-parent-flow/Parameterized ETL`. 
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/5.png" >
+    </p>
+    <br>
+
+5. The Prefect deployment has been running, but if you check `Work Queues` menu, it is in waiting state and not started yet. 
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/6.png" >
+    </p>
+    <br>
+
+    Lets start deployment job by following this command `prefect agent start --work-queue "default"`.
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/7.png" >
+    </p>
+    <br>
+
+    Open `Work Queues` menu. Well, it takes `5 minute 19 second` to complete `etl-parent-flow`.
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/8.png" >
+    </p>
+    <br>
+
+
+
+6. Dont forget to check our Google Storage Bucket. You see, that 3 different months yellow taxi data has stored. It meant, our Prefect successfully executed. 
+
+    <p align="center">
+    <img src="2_Images/5_Parameterizing_Flow/9.png" >
+    </p>
+    <br>
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
 
 
 Schedules & Docker Storage with Infrastructure
 ===============================================
 
+In this lesson, we will learn how to schedulling flows and also running flow in docker containers. 
 
+#### Schedule Flow via UI
+
+So, first we will learn about schedulling flows by following step below: 
+
+1. Check out Prefect deployment dashboard at `http://127.0.0.1:4200/deployments`. Click `Parameterized ETL`, then `Add` schedule. 
+
+    <p align="center">
+    <img src="2_Images/6_Schedulling_and_Containerizing/1.png" >
+    </p>
+    <br>
+
+    In add schedule menu below, you see that we can manage schedule type based `Interval`, `Cron` and `Rrule`. Moreover, we can set time zone and it really helpful to schedule flow wherever country we are. 
+    
+    <p align="center">
+    <img src="2_Images/6_Schedulling_and_Containerizing/2.png" >
+    </p>
+    <br>
+
+    In this section, we try to set every five minute to run this prefect deployment. You can change it whatever you want.
+    
+    <p align="center">
+    <img src="2_Images/6_Schedulling_and_Containerizing/3.png" >
+    </p>
+    <br>
+
+2.  You can also schedule flow when creating deployment. Check this [link](https://docs.prefect.io/concepts/schedules/) for more information.
+
+<br>
+
+#### Running Flows In Docker Container
+
+We can put our Prefect flow code in lots of different place, so far we have running locally on our machine and that's been nice for getting started. But, if we want to make things a little bit more production ready and have other people be able to access our flow code storage we could put it on version control system (github, gitlab, etc), we could do it with Cloud (AWS S3, Google Cloud Storage, Azure Blob Storage) so we have a lot of options. 
+
+In this section, we going to store our code in a Docker image and put it up on Docker Hub and then when we run a Docker container that code will be right there by following this step: 
+
+1. Create `Dockerfile`. 
+    ```Dockerfile
+    FROM prefecthq/prefect:2.7.7-python3.9
+
+    COPY requirements.txt .
+
+    RUN pip install -r requirements.txt --trusted-host pypi.python.org --no-cache-dir
+
+    COPY flows /opt/prefect/flows
+    COPY data /opt/prefect/data
+
+    ```
+2. Create requirements.txt
+    
+    ```
+    pandas==1.5.2
+    prefect==2.7.7
+    prefect-gcp[cloud_storage]==0.2.3
+    profobuf==4.21.11
+    pyarrow==10.0.1
+    ```
+
+3. Build `Dockerfile` image by following this command `docker image build -t try/prefect:zoomcamp .`
+
+4. Let's push that all up to Docker Hub, so anyone can access it there. 
+    - Create docker container block:
+        - Go to prefect block in navigation manu.
+        - Add new block, select `Docker Container`.
+        - Name your block, whatever you want. 
+        - Add Docker Tage of your docker image.
+        - Select `ALWAYS` in your image pull policy form.
+        - Click `Create`.
+    
+    - We also can craete docker block via pyton programming by following this code:
+        ```Pyhton
+        from prefect.infrastucture.docker import DockerContainer
+
+        docker_block = DockerContainer(
+            image="try/prefect:zoomcamp
+            image_pull_policy="ALWAYS"
+            auto_remove=True
+        )
+
+        docker_block.save("zoom", overwrite=True)
+
+        ```
+5. Create prefect deployment, in this section we will create it via python:
+    ```Python
+    from prefect.deployments import Deployment
+    from prefect.infrastructure.docker import DockerContainer
+    from parameterized_flow import etl_parent_flow
+
+    docker_block= DockerContainer.load("zoomcamp")
+
+    docker_dep = Deployment.build_from_flow(
+        flow=etl_parent_flow,
+        name="docker-flow",
+        infrastructure=docker_block
+    )
+    if __name__ == "__main__":
+        docker_dep.apply()
+    ```
+6. Start `default` agent by following this command on CLI:
+    `prefect agent start -q default`
+
+7. Run the deployement queue: 
+    `prefect deployment run etl-parent-flow/docker-flow`
+
+
+_[back to the top](#table-of-contents)_
+
+<br></br>
 
 
 Perfect Cloud/Additional Resource
 =================================
 
 (Comming Soon)
+
+
+Week 2 Homework
+===============
+
+
+#### Question 1. Load January 2020 data
+Using the `etl_web_to_gcs.py` flow that loads taxi data into GCS as a guide, create a flow that loads the green taxi CSV dataset for January 2020 into GCS and run it. Look at the logs to find out how many rows the dataset has.
+
+How many rows does that dataset have?
+#### Answer : 447,770 (A)
+
+<p align="center">
+<img src="3_Homework/images/1.png" >
+</p>
+<br>
+
+
+#### Question 2. Scheduling with Cron
+Cron is a common scheduling specification for workflows.
+
+Using the flow in etl_web_to_gcs.py, create a deployment to run on the first of every month at 5am UTC. What’s the cron schedule for that?
+#### Answer : 0 5 1 * * (A)
+
+
+<p align="center">
+<img src="3_Homework/images/2.png" >
+</p>
+<br>
+
+#### Question 3. Loading data to BigQuer
+Using etl_gcs_to_bq.py as a starting point, modify the script for extracting data from GCS and loading it into BigQuery. This new script should not fill or remove rows with missing values. (The script is really just doing the E and L parts of ETL).
+
+The main flow should print the total number of rows processed by the script. Set the flow decorator to log the print statement.
+
+Parametrize the entrypoint flow to accept a list of months, a year, and a taxi color.
+
+Make any other necessary changes to the code for it to function as required.
+
+Create a deployment for this flow to run in a local subprocess with local flow code storage (the defaults).
+
+Make sure you have the parquet data files for Yellow taxi data for Feb. 2019 and March 2019 loaded in GCS. Run your deployment to append this data to your BiqQuery table. How many rows did your flow code process?
+#### Answer : 14,851,920
+
+- Python Code:
+    ```Python
+    import os
+    import pandas as pd
+    from pathlib import Path
+    from prefect import task, flow
+    from prefect.tasks import task_input_hash
+    from datetime import timedelta
+    from prefect_gcp.cloud_storage import GcsBucket
+    from prefect_gcp import GcpCredentials
+
+
+    @task(log_prints=True, retries=3, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+    def get_url_write_local(url, color):
+        file_name = url.split("/")[-1]
+        os.system(f" wget -P data/{color} {url}" )
+        
+        path = Path(f"data/{color}/{file_name}")
+        return path
+
+    @task()
+    def write_gcs(chunk_path, gcs_path):
+        gcs_block = GcsBucket.load("prefect-gcs")
+        gcs_block.upload_from_path(
+            from_path=f"{chunk_path}",
+            to_path=f"{gcs_path}"
+        )
+
+    @task(log_prints=True,retries=3)
+    def write_to_bq(chunk_path):
+        gcp_credentials_block = GcpCredentials.load("prefect-bq")
+        df = pd.read_parquet(chunk_path)
+        df.to_gbq(
+            destination_table="test_bq.yellow_trips",
+            credentials = gcp_credentials_block.get_credentials_from_service_account(),
+            project_id = "dezoomcamp-376313",
+            chunksize = 50000,
+            if_exists="append"
+        )
+
+    @flow()
+    def child_el_1(color, url, gcs_path, folder_name_file):
+        #get file from url, create csv path and write it to local
+        if os.path.exists(f"data/{color}/temp"):
+            pass
+        else:
+            os.makedirs(f"data/{color}/temp")
+
+
+        file_path = get_url_write_local(url, color)
+
+        #read csv file by chunk
+        with pd.read_csv(file_path, chunksize=1e6) as reader:
+            i =1
+            for chunk in reader:
+                #create path for chunk in local temp
+                if os.path.exists(f"data/{color}/temp/{folder_name_file}"):
+                    pass
+                else:
+                    os.mkdir(f"data/{color}/temp/{folder_name_file}") 
+
+                chunk_path = Path(f"data/{color}/temp/{folder_name_file}/part_{i}.parquet")
+                
+                #write chunks to local
+                if chunk_path.is_file():
+                    print(f"Your chunk path is exists!")
+                    pass
+                else:
+                    chunk.to_parquet(chunk_path, compression="gzip")
+                
+                #write chunks to gcs 
+                gcs_file_path = Path(f"{gcs_path}/part_{i}.parquet")
+                write_gcs(chunk_path, gcs_file_path)
+
+                #write chunks to bq
+                write_to_bq(chunk_path)
+
+                #delete chunk file in local temp
+                os.remove(chunk_path)
+
+                #incremental for chunk 
+                i+=1
+
+
+    @flow()
+    def parent_el(color,year, months):
+
+        for month in months: 
+            folder_name_file=f"{color}_tripdata_{year}-{month:02}"
+            url = f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{folder_name_file}.csv.gz"
+            gcs_path = f"data/{color}/{folder_name_file}"
+            child_el_1(color, url,gcs_path, folder_name_file)
+
+    if __name__ == "__main__":
+        color = "yellow"
+        year = "2019"
+        months = [2,3]
+        parent_el(color, year, months)
+    ```
+- Prefcect Deployment
+    - Build: 
+    <p align="center">
+    <img src="3_Homework/images/6.png" >
+    </p>
+    <br>
+
+    - `parent_el-deployment.yaml` with additional parameter
+
+    ```yaml
+    ###
+    ### A complete description of a Prefect Deployment for flow 'parent-el'
+    ###
+    name: Extract Load
+    description: null
+    version: 5fd1a9f2adefb7385c8ea9d276d2baaa
+    # The work queue that will handle this deployment's runs
+    work_queue_name: default
+    tags: []
+    parameters: {"color":"yellow", "months":[2,3], "year":2019}
+    schedule: null
+    infra_overrides: {}
+    infrastructure:
+    type: process
+    env: {}
+    labels: {}
+    name: null
+    command: null
+    stream_output: true
+    working_dir: null
+    block_type_slug: process
+    _block_type_slug: process
+
+    ###
+    ### DO NOT EDIT BELOW THIS LINE
+    ###
+    flow_name: parent-el
+    manifest_path: null
+    storage: null
+    path: /home/thisiswildanw/project/de_zoomcamp/Week_2_Workflow_Orchestration/3_Homework/Question_3
+    entrypoint: el.py:parent_el
+    parameter_openapi_schema:
+    title: Parameters
+    type: object
+    properties:
+        color:
+        title: color
+        position: 0
+        year:
+        title: year
+        position: 1
+        months:
+        title: months
+        position: 2
+    required:
+    - color
+    - year
+    - months
+    definitions: null
+
+    ```
+    
+    - Run `parent_el-deployment.yaml`
+    <p align="center">
+    <img src="3_Homework/images/7.png" >
+    </p>
+    <br>
+
+
+    - Execute flow runs from this deployment: 
+    <p align="center">
+    <img src="3_Homework/images/8.png" >
+    </p>
+    <br>
+
+
+- GCP File
+    <p align="center">
+    <img src="3_Homework/images/3.png" >
+    </p>
+    <br>
+
+    <p align="center">
+    <img src="3_Homework/images/4.png" >
+    </p>
+    <br>
+
+- Big Query
+    <p align="center">
+    <img src="3_Homework/images/5.png" >
+    </p>
+    <br>
+
+
+#### Question 4. Github Storage Block
+
+Using the web_to_gcs script from the videos as a guide, you want to store your flow code in a GitHub repository for collaboration with your team. Prefect can look in the GitHub repo to find your flow code and read it. Create a GitHub storage block from the UI or in Python code and use that in your Deployment instead of storing your flow code locally or baking your flow code into a Docker image.
+
+Note that you will have to push your code to GitHub, Prefect will not push it for you.
+
+Run your deployment in a local subprocess (the default if you don’t specify an infrastructure). Use the Green taxi data for the month of November 2020.
+
+How many rows were processed by the script?
+
+#### Answer : 
+
+
+#### 
+
+
+
+
+
