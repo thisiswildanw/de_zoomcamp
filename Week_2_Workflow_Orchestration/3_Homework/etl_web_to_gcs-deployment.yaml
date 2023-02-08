@@ -1,0 +1,40 @@
+###
+### A complete description of a Prefect Deployment for flow 'etl-web-to-gcs'
+###
+name: Answer No 4
+description: null
+version: f2f65deebcd106274d92fc47cb01c41a
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+tags: []
+parameters: {}
+schedule: null
+infra_overrides: {}
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: etl-web-to-gcs
+manifest_path: null
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  _block_document_id: 81a40db1-f6a9-4f2b-a3f3-2596f248fbf7
+  _block_document_name: anonymous-83a59a67-4168-4851-9c66-946eb8c03cbd
+  _is_anonymous: true
+  block_type_slug: process
+  _block_type_slug: process
+storage: null
+path: /home/thisiswildanw/project/de_zoomcamp/Week_2_Workflow_Orchestration/3_Homework
+entrypoint: etl_web_to_gcs_q4.py:etl_web_to_gcs
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties: {}
+  required: null
+  definitions: null

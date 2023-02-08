@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import pandas as pd
 from prefect import flow, task
 from prefect.tasks import task_input_hash
@@ -13,8 +14,8 @@ def get_data(url:str):
 
 @task(log_prints=True, )
 def clean(df = pd.DataFrame):
-    df["tpep_pickup_datetime"] = pd.to_datetime(df["tpep_pickup_datetime"])
-    df["tpep_dropoff_datetime"] = pd.to_datetime(df["tpep_dropoff_datetime"])
+    df["lpep_pickup_datetime"] = pd.to_datetime(df["lpep_pickup_datetime"])
+    df["lpep_dropoff_datetime"] = pd.to_datetime(df["lpep_dropoff_datetime"])
     return df
 
 @task(log_prints=True)
@@ -39,10 +40,10 @@ def etl_web_to_gcs():
     month   = 11
     dataset_file=f"{color}_tripdata_{year}-{month:02}"
     dataset_url= f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{dataset_file}.csv.gz"
-    
+
     df = get_data(dataset_url)
     cleaned_df = clean(df)
-    print(g"row_size={len(cleaned_df)}")
+    print(f"row_size={len(cleaned_df)}")
     path = write_local(cleaned_df, color, dataset_file)
     write_gcs(path)
 
